@@ -26,10 +26,17 @@ class _MainScreenState extends State<MainScreen> {
   bool isLogin = true;
   static final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
   Map<String, dynamic> _deviceData = <String, dynamic>{};
+  SharedPreferences _prefs;
+  DateTime _lastUsed;
 
   late int _selected_index = 0;
   static final List<Widget> _widgetOptions = <Widget>[
-    const TextField(),
+    _isLockedOut
+            ? Text('You are locked out until ${_lastUsed.add(Duration(hours: 12)).toIso8601String()}.')
+            : RaisedButton(
+                child: Text('Press me!'),
+                onPressed: _updateLastUsed,
+              ),
     const TextField(),
   ];
   void navButtonTap(int index){
@@ -38,10 +45,6 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  // Hit backend to get if the user is a member or not, if not a member, then the limit is 25 minutes and then block for 12 hours, but if the user is a member , then the limit shouldn't be there
-  
-
-
   @override
   void initState()
   {
@@ -49,6 +52,28 @@ class _MainScreenState extends State<MainScreen> {
     initPlatformState();
   }
 
+  // Hit backend to get if the user is a member or not, if not a member, then the limit is 25 minutes and then block for 12 hours, but if the user is a member , then the limit shouldn't be there
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    _lastUsed = DateTime.parse(_prefs.getString('lastUsed') ?? '2000-01-01');
+  }
+
+  void _updateLastUsed() async {
+    final now = DateTime.now();
+    await _prefs.setString('lastUsed', now.toIso8601String());
+    setState(() {
+      _lastUsed = now;
+    });
+  }
+
+  bool get _isLockedOut {
+    final now = DateTime.now();
+    final difference = now.difference(_lastUsed);
+    return difference.inMinutes < 15;
+  }
+
+
+  //Getting device info
 
   Future<void> initPlatformState() async {
     var deviceData = <String, dynamic>{};
