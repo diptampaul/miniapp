@@ -38,6 +38,9 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  // Hit backend to get if the user is a member or not, if not a member, then the limit is 25 minutes and then block for 12 hours, but if the user is a member , then the limit shouldn't be there
+  
+
 
   @override
   void initState()
